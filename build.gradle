@@ -8,5 +8,7 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'org.apache.tomcat:tomcat-catalina:8.0.20'
+    compile 'redis.clients:jedis:2.6.2'
+    testCompile 'junit:junit:4.11'
 }
