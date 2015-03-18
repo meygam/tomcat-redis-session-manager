@@ -3,6 +3,7 @@ package io.meygam.catalina.session;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.session.PersistentManagerBase;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
 import java.util.HashSet;
@@ -30,7 +31,8 @@ public class RedisManager extends PersistentManagerBase {
     @Override
     protected void initInternal() throws LifecycleException {
         this.setDistributable(true);
-        redisStore.setJedisCluster(getJedisCluster(getRedisNodes()));
+//        redisStore.setJedisCluster(getJedisCluster(getRedisNodes()));
+        redisStore.setJedis(new Jedis(getRedisNodes()));
     }
 
     public String getRedisNodes() {
@@ -45,7 +47,7 @@ public class RedisManager extends PersistentManagerBase {
         String[] items = redisNodes.split(",");
         Set<HostAndPort> jedisClusterNodes = new HashSet<HostAndPort>();
         for (int i = 0; i < items.length; i++) {
-            jedisClusterNodes.add(new HostAndPort(items[i], 7379));
+            jedisClusterNodes.add(new HostAndPort(items[i], 6379));
         }
         return new JedisCluster(jedisClusterNodes);
     }

@@ -1,14 +1,87 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
-sourceCompatibility = 1.5
-version = '1.0'
+compileJava {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
+group = "io.meygam"
+version = "0.0.1"
 
 repositories {
     mavenCentral()
+    maven { url "https://clojars.org/repo" }
 }
 
 dependencies {
     compile 'org.apache.tomcat:tomcat-catalina:8.0.20'
     compile 'redis.clients:jedis:2.6.2'
     testCompile 'junit:junit:4.11'
+    testCompile "redis.embedded:embedded-redis:0.3"
+    testCompile 'org.apache.httpcomponents:httpclient:4.4'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar,javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'tomcat-redis-session-manager'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Tomcat session manager to store the session to redis backend.'
+                url 'https://github.com/meygam/tomcat-redis-session-manager'
+
+                scm {
+                    connection 'scm:git:git@github.com:meygam/tomcat-redis-session-manager.git'
+                    developerConnection 'scm:git:git@github.com:meygam/tomcat-redis-session-manager.git'
+                    url 'https://github.com/meygam/tomcat-redis-session-manager'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'speriyasamy'
+                        name 'Saravana Kumar Periyasamy'
+                        email 'saravanakumar.periyasamy@gmail.com'
+                    }
+                }
+            }
+        }
+    }
 }

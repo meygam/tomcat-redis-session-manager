@@ -5,13 +5,11 @@ import org.apache.catalina.session.StandardSession;
 import org.apache.catalina.session.StoreBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by saravana on 3/16/15.
@@ -20,12 +18,13 @@ public class RedisStore extends StoreBase {
 
     private static final Log log = LogFactory.getLog(RedisStore.class);
 
-    private JedisCluster jedisCluster;
-    private Set<String> keys = Collections.emptySet();
+//    private JedisCluster jedisCluster;
+    private Jedis jedis;
+    private Set<String> keys = new HashSet<String>();
 
     @Override
     public int getSize() throws IOException {
-        return getJedisCluster().dbSize().intValue();
+        return getJedis().dbSize().intValue();
     }
 
     @Override
@@ -36,7 +35,7 @@ public class RedisStore extends StoreBase {
     @Override
     public Session load(String id) throws ClassNotFoundException, IOException {
         StandardSession standardSession = (StandardSession) getManager().createSession(id);
-        Map<String, String> sessionAttributes = getJedisCluster().hgetAll(id);
+        Map<String, String> sessionAttributes = getJedis().hgetAll(id);
         for (Map.Entry<String, String> entry : sessionAttributes.entrySet()) {
             standardSession.setAttribute(entry.getKey(), entry.getValue());
         }
@@ -46,12 +45,12 @@ public class RedisStore extends StoreBase {
 
     @Override
     public void remove(String id) throws IOException {
-        getJedisCluster().del(id);
+        getJedis().del(id);
     }
 
     @Override
     public void clear() throws IOException {
-        getJedisCluster().flushAll();
+        getJedis().flushAll();
         keys.clear();
     }
 
@@ -60,16 +59,24 @@ public class RedisStore extends StoreBase {
         StandardSession standardSession = (StandardSession) session;
         for (Enumeration<String> attributeNames = standardSession.getAttributeNames(); attributeNames.hasMoreElements(); ) {
             String attributeName = attributeNames.nextElement();
-            getJedisCluster().hset(session.getId(), attributeName, standardSession.getAttribute(attributeName).toString());
+            getJedis().hset(session.getId(), attributeName, standardSession.getAttribute(attributeName).toString());
         }
         keys.add(session.getId());
     }
 
-    public JedisCluster getJedisCluster() {
-        return jedisCluster;
+//    public JedisCluster getJedisCluster() {
+//        return jedisCluster;
+//    }
+
+//    public void setJedisCluster(JedisCluster jedisCluster) {
+//        this.jedisCluster = jedisCluster;
+//    }
+
+    public Jedis getJedis() {
+        return jedis;
     }
 
-    public void setJedisCluster(JedisCluster jedisCluster) {
-        this.jedisCluster = jedisCluster;
+    public void setJedis(Jedis jedis) {
+        this.jedis = jedis;
     }
 }
