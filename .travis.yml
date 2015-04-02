@@ -1,3 +1,5 @@
 language: java
 jdk:
   - oraclejdk7
+notifications:
+  hipchat: 4faadfcf7d6afa0fa8a0c6dc359d15@tomcat-redis-session-manager
